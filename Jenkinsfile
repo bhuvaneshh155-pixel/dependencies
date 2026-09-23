@@ -11,17 +11,36 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 
+                bat 'echo def find_min(numbers): > app.py'
+                bat 'echo     if not numbers: return None >> app.py'
+                bat 'echo     return min(numbers) >> app.py'
+                bat 'echo def count_odds(numbers): >> app.py'
+                bat 'echo     return sum(1 for x in numbers if x %% 2 != 0) >> app.py'
+
                 
-                sh '''
-                    echo "=== Checking Python Environment ==="
-                    python3 --version || python --version
-                    
-                    echo "=== Creating Virtual Environment ==="
-                    python3 -m venv venv || python -m venv venv
-                    
-                    echo "=== Installing Dependencies ==="
-                    . venv/bin/activate || ./venv/Scripts/activate
-                    pip install --upgrade pip
+                bat 'echo import pytest > test_app.py'
+                bat 'echo from app import find_min, count_odds >> test_app.py'
+                bat 'echo @pytest.mark.parametrize("numbers, expected", [ >> test_app.py'
+                bat 'echo     ([1, 2, 3], 1), >> test_app.py'
+                bat 'echo     ([-1, -5, 0], -5), >> test_app.py'
+                bat 'echo     ([7], 7), >> test_app.py'
+                bat 'echo     ([10, 20, 30], 99) >> test_app.py' 
+                bat 'echo ]) >> test_app.py'
+                bat 'echo def test_find_min(numbers, expected): >> test_app.py'
+                bat 'echo     assert find_min(numbers) == expected >> test_app.py'
+                bat 'echo @pytest.mark.parametrize("numbers, expected", [ >> test_app.py'
+                bat 'echo     ([1, 2, 3, 4, 5], 3), >> test_app.py'
+                bat 'echo     ([2, 4, 6], 0), >> test_app.py'
+                bat 'echo     ([1, 3, 5, 7], 4) >> test_app.py'
+                bat 'echo ]) >> test_app.py'
+                bat 'echo def test_count_odds(numbers, expected): >> test_app.py'
+                bat 'echo     assert count_odds(numbers) == expected >> test_app.py'
+
+        
+                bat '''
+                    python -m venv venv
+                    call venv\\Scripts\\activate.bat
+                    python -m pip install --upgrade pip
                     pip install pytest
                 '''
             }
@@ -29,8 +48,9 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                sh '''
-                    . venv/bin/activate || ./venv/Scripts/activate
+                
+                bat '''
+                    call venv\\Scripts\\activate.bat
                     pytest -v
                 '''
             }
